@@ -1,35 +1,77 @@
 import urllib2
 import string
+import re
 
-response = urllib2.urlopen('http://www.inf.ufsc.br/~douglas.martins/')
-html = response.read()
+def fetch_html(page):
+	response = urllib2.urlopen(page)
+	return response.read()
 
-alphabet = {}
-letters = string.ascii_lowercase
-for letter in letters:
-	alphabet.update({letter:0})
+def find_p(html):
+	text = ''
+	results = re.compile(r'<p>(.*?)</p>').findall(html)
+	print results
+	for result in results:
+		text += result
+	return text
 
-text = ''
-for i in range(len(html)):
-	character = html[i]
-	if character == '<' and html[i+1] == 'p' and html[i+2] == '>': #achei <p>
-		for j in range(i+3, len(html)):
-			if character == '<' and html[j+1] == '/' and html[j+2] == 'p' and html[j+3] == '>': #achei <\p>
-				i = i+j
-				break
-			text += html[j]
+def remove_tag(text):
+	return re.sub('<.*?>', '', text)
 
+def remove_nbsp(text):
+	return re.sub('&nbsp;', '', text)
 
-def remove_a(text):
-	clear_text = ''
+def count_letters(text):
+	total_count = 0
+	letters = string.ascii_lowercase
+	alphabet = {letter : 0 for letter in letters}
+
+	for char in text:
+		if char in letters:
+			alphabet[char] += 1
+			total_count += 1
+
+	for key in alphabet:
+		alphabet[key] = float((alphabet[key]*100))/total_count
+
+	return alphabet
+
+def count_bigrams(text):
+	total_count = 0
+	letters = string.ascii_lowercase
+	bigrams = {}
+
 	for i in range(len(text)):
-		if text[i] == '<':
-			for j in range(i+1, len(text)):
-				if text[j] == '>':
-					i = i+j
-					break
-				clear_text += text[j]
-		clear_text += text[i]
-	return clear_text
+		bigram = ''
+		if text[i] in letters and i < len(text)-1 and text[i+1] in letters:
+			bigram = text[i] + text[i+1]
+			if bigram not in bigrams:
+				bigrams.update({bigram : 0})
+			else:
+				bigrams[bigram] += 1
+			total_count += 1
+	
+	for key in bigrams:
+		bigrams[key] = float((bigrams[key]*100))/total_count
 
-print remove_a(text)
+	return bigrams
+
+def do_the_thing(page):
+	html = fetch_html(page)
+	html = find_p(html)
+	html = remove_tag(html)
+	html = remove_nbsp(html)
+	html = string.lower(html)
+
+	result = count_letters(html)
+	sorted_result = sorted(result, key=result.__getitem__, reverse=True)
+	for letter in sorted_result:
+		print '%s - %.2f%%' % (letter, result[letter])
+
+	print '################'
+
+	result_bigrams = count_bigrams(html)
+	sorted_result = sorted(result_bigrams, key=result_bigrams.__getitem__, reverse=True)
+	for letter in sorted_result:
+		print '%s - %.2f%%' % (letter, result_bigrams[letter])
+
+do_the_thing('https://pt.wikipedia.org/wiki/Filosofia')
