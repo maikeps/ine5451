@@ -30,13 +30,27 @@ class PermutationUtils:
 		return rotor
 
 class Key:
-	def __init__(self, rotors, notches, ringstellung, plugboard, rotor_pos):
-		self.rotors = rotors
+	def __init__(self, rotors, ringstellung, plugboard, rotor_pos):
+		self.rotors = rotors[::-1]
+		notches = []
+		for rotor in rotors:
+			notches.append(self.get_notches(rotor))
 		self.notches = notches
 		self.ringstellung = ringstellung
 		self.plugboard = plugboard
-		self.rotor_pos = rotor_pos
+		self.rotor_pos = rotor_pos[::-1]
 
+	def get_notches(self, rotor):
+		if rotor == 'I':
+			return 'Q'
+		elif rotor == 'II':
+			return 'E'
+		elif rotor == 'III':
+			return 'V'
+		elif rotor == 'IV':
+			return 'J'
+		elif rotor == 'V':
+			return 'Z'
 
 class Enigma:
 
@@ -70,15 +84,16 @@ class Enigma:
 		r2 = (ord(key.ringstellung[1])-65)
 		r3 = (ord(key.ringstellung[2])-65)
 
-		m1 = n1 - p1
-		nm2 = n2 - p2 - 1
+		m1 = (n1 - p1) % 26
+		nm2 = (n2 - p2 - 1) % 26
 		m2 = m1 + 26*nm2 + 1
+
+		i1 = p1 - r1 + 1
 
 		for j in range(len(text)):
 			k1 = int((j - m1 + 26) / 26)
 			k2 = int((j - m2 + 650) / 650)
-
-			i1 = p1 - r1 + 1
+			
 			i2 = p2 - r2 + k1 + k2
 			i3 = p3 - r3 + k2
 
@@ -126,16 +141,3 @@ class Enigma:
 			cypher += char
 
 		return cypher
-
-
-permut = PermutationUtils()
-
-rotors = ["I", "II", "III"]
-notches = ["Q", "E", "V"]
-ringstellung = ["B", "B", "B"]
-plugboard = permut.build_permutation('(AB)')
-rotor_start_pos = ["A", "A", "A"]
-
-k = Key(rotors, notches, ringstellung, plugboard, rotor_start_pos)
-enigma = Enigma()
-print(enigma.enigma_enc("BOCEJO", k))
