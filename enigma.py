@@ -35,7 +35,7 @@ class Key:
 		notches = []
 		for rotor in rotors:
 			notches.append(self.get_notches(rotor))
-		self.notches = notches
+		self.notches = notches[::-1]
 		self.ringstellung = ringstellung
 		self.plugboard = plugboard
 		self.rotor_pos = rotor_pos[::-1]
@@ -85,8 +85,8 @@ class Enigma:
 		r3 = (ord(key.ringstellung[2])-65)
 
 		m1 = (n1 - p1) % 26
-		nm2 = (n2 - p2 - 1) % 26
-		m2 = m1 + 26*nm2 + 1
+		#nm2 = (n2 - p2 - 1) % 26
+		m2 = m1 + 26*((n2 - p2 - 1) % 26) + 1
 
 		i1 = p1 - r1 + 1
 
@@ -98,7 +98,6 @@ class Enigma:
 			i3 = p3 - r3 + k2
 
 			char = text[j]
-
 			#plugboard
 			char = self.permut.permutation(char, 1, key.plugboard)
 
@@ -130,14 +129,30 @@ class Enigma:
 			char = self.permut.permutation(char, 1, self.permut.inverse_permut(self.rotors[key.rotors[1]]))
 			char = self.permut.permutation(char, -i2, self.shift_up)
 
-			#rotor 2 back
+			#rotor 1 back
 			char = self.permut.permutation(char, i1+j, self.shift_up)
 			char = self.permut.permutation(char, 1, self.permut.inverse_permut(self.rotors[key.rotors[0]]))
 			char = self.permut.permutation(char, -i1-j, self.shift_up)
 
 			#plugboard back
 			char = self.permut.permutation(char, 1, key.plugboard)
-
 			cypher += char
 
 		return cypher
+
+
+permut = PermutationUtils()
+
+rotors = ['V', 'II', 'I']
+ringstellung = ['A', 'A', 'A']
+plugboard = permut.build_permutation('')
+rotor_start_pos = ['C', 'N', 'P']
+k = Key(rotors, ringstellung, plugboard, rotor_start_pos)
+enigma = Enigma()
+
+print(enigma.enigma_enc('EEOYFIELDWPFYMKYSXFFPVWYKLRWJOTIZMARHEUMICCDYEHLZWLYKUIPQK\
+OBYZNNQLXPWAZTMAMWHDQKWTXUASWCMRYYISVRPVXRBYIPIHMDRAJIRPTNHLJKINNTA\
+LUZOWKEHTFGKKMIETWOWWCVZUKZIKFSXLTLEXGEAZZCRKUVCAPRJCNQVNFWSXDWQD\
+YZFPWPADPXFYALOPXWYLIPWTZINKOVFHKTLYXMEHNMBWAXJPLDYZETEGSKAWBIBLYZJRMAY\
+OVCIVJLSKPWATPILFITFXYTBGPQZROXWRVYQNBOVPKMSMVSIDFEWSPTAAZZHJEYXPJHPEUQO\
+PTUEKZSMDWKVHJDFEWJIGEWWFSYJTRHCNUYJEBQNMJCYOQBITHGQFVMCQLUENVDY', k))
