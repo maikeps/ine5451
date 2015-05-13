@@ -19,14 +19,11 @@ def generate_output_xor(x_):
 	u = ''
 	tuplas = x_.items()
 	for (key,value) in x_.items():
-	#for i in range(len(tuplas)):
 		y = spn.s[key]
 		y_ = spn.s[value]
 		
 		aux = (y, y_)
 		output_xor.append((key,value) + aux)
-	# print(output_xor)
-
 	return output_xor
 
 
@@ -69,14 +66,13 @@ def attack(tuples, s_inverse):
 				if u2 == '0110' and u4 == '0110':
 					keys_count[key] += 1
 	
-	# print(keys_count)			
-
 	max_ = -1
 	max_key = ()
 	for tuple_ in keys_try:
 		if(keys_count[tuple_]) > max_:
 			max_ = keys_count[tuple_]
 			max_key = tuple_
+	#print(keys_count)
 	return max_key
 
 def xor(bits1, bits2):
@@ -85,16 +81,19 @@ def xor(bits1, bits2):
 		xor += spn.xor(bits1[i], bits2[i])
 	return xor
 
+#(x, x', y, y')
 def build_text(quadruples):
 	tuples = []
 	for quadruple in quadruples:
 		for i in range(16):
-			for j in range(16):
-				bits1 = bits[i] + quadruple[0] + '0000' + bits[j]
-				bits2 = bits[i] + quadruple[1] + '0000' + bits[j]
-				tuples.append((bits1, bits2, spn.spn(bits1, key), spn.spn(bits2, key)))
+			for j in range(4):
+				bits1 = bits[i] + quadruple[0] + '1001' + bits[j]
+				bits2 = bits[i] + quadruple[1] + '1001' + bits[j]
+				tuples.append((bits1, bits2, spn.spn(bits1, key), spn.spn(bits2, key))
+	print(len(tuples))
 	return tuples
 
 quadruples = generate_output_xor(generate_input_xor('1011'))
+#print(quadruples)
 print(attack(build_text(quadruples), s_inverse()))
 
